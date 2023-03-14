@@ -19,17 +19,17 @@ class StateType(Enum):
     END = 5
 
 class Action(Enum):
-    LEFT = 1
-    RIGHT = 2
-    UP = 3
-    DOWN = 4
+    UP = 0
+    RIGHT = 1
+    DOWN = 2
+    LEFT = 3
 
 class Policy(Enum):
     CLOSENESS = 1,
     MAXPOWER = 2
 
 class Environment:
-    def __init__(self, x_size = 5, y_size = 6, start_x = 0, start_y = 4, policy = Policy.CLOSENESS, alpha = 0.8, gamma = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False):
+    def __init__(self, x_size = 5, y_size = 6, start_x = 0, start_y = 4, policy = Policy.CLOSENESS, lr = 0.8, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False):
         self.x_size = x_size
         self.y_size = y_size
         # grid contains state objects
@@ -37,9 +37,9 @@ class Environment:
         self.actions = [Action.LEFT, Action.RIGHT, Action.UP, Action.DOWN]
         self.state_size = x_size * y_size
         self.action_size = len(self.actions)
-        self.q_table = np.zeros((self.y_size, self.x_size, self.action_size)).astype(float)
-        self.alpha = alpha
-        self.gamma = gamma
+        self.q_table = np.zeros((self.x_size, self.y_size, self.action_size)).astype(float)
+        self.lr = lr
+        self.discount_factor = discount_factor
         self.policy = policy
         self.mine_prob = mine_prob
         self.power_prob = power_prob
@@ -147,6 +147,12 @@ class Environment:
                 return 1
             else:
                 return 0
+    
+    # return True if the current state is the goal state
+    def reached_goal(self):
+        if self.agent_state.type == StateType.END:
+            return True
+        return False
 
 
 env = Environment(random_states_distribution=False)
