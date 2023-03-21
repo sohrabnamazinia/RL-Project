@@ -1,5 +1,7 @@
 # RL-Project
 
+The user only needs to run the Main.py file
+
 In the defined environment, x is the vertical axis starting from the top left
 Also, y is the horizontal axis starting from top left
 
