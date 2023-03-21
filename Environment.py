@@ -34,7 +34,7 @@ class Environment:
         self.y_size = y_size
         # grid contains state objects
         self.grid = np.zeros((self.x_size, self.y_size)).astype(State)
-        self.actions = [Action.LEFT, Action.RIGHT, Action.UP, Action.DOWN]
+        self.actions = [Action.UP, Action.RIGHT,Action.DOWN, Action.LEFT]
         self.state_size = x_size * y_size
         self.action_size = len(self.actions)
         self.q_table = np.zeros((self.x_size, self.y_size, self.action_size)).astype(float)
@@ -48,6 +48,7 @@ class Environment:
         self.agent_state = None
         self.MAX_REWARD = 10000000
         self.MIN_REWARD = -10000000
+        self.POWER_REWARD = 1
         
         if random_states_distribution:
             self.reset()
@@ -103,7 +104,7 @@ class Environment:
         return result
 
     def plot_grid(self):
-        plt.imshow(env.convert_grid_to_digits(), cmap='viridis', interpolation='nearest')
+        plt.imshow(self.convert_grid_to_digits(), cmap='viridis', interpolation='nearest')
         plt.colorbar()
         plt.show()
         
@@ -113,7 +114,7 @@ class Environment:
             for j in range(self.y_size):
                 print(str(self.grid[i][j].type).split(".")[1], end=" ")
             print("\n")
-        print("Starting Location of Agent: " + str(self.agent_state.x) + ", " + str(self.agent_state.y))
+        print("Current Location of Agent: " + str(self.agent_state.x) + ", " + str(self.agent_state.y) + "\n")
 
     def step(self, state, action):
         x, y = state.x, state.y
@@ -130,38 +131,30 @@ class Environment:
             return None
 
         next_state = self.grid[x][y] 
-        reward = self.compute_reward(next_state)
+        reward = self.compute_reward(next_state, self.policy)
         self.agent_state = next_state
         return (next_state, reward)
         
 
-    def compute_reward(self, state_2):
+    def compute_reward(self, state_2, policy):
         if state_2.type == StateType.END:
-            return self.MAX_REWARD
+                return self.MAX_REWARD
         elif state_2.type == StateType.MINE:
-            return self.MIN_REWARD
-        elif (self.policy == Policy.CLOSENESS):
-            return (1 / math.sqrt(((state_2.x - self.end_state.x)**2 + (state_2.y - self.end_state.y)**2)))
-        elif (self.policy == Policy.MAXPOWER):
-            if (state_2.type == StateType.POWER):
-                return 1
+                return self.MIN_REWARD
+        elif policy == Policy.CLOSENESS:
+                return (1 / math.sqrt(((state_2.x - self.end_state.x)**2 + (state_2.y - self.end_state.y)**2)))
+        elif policy == Policy.MAXPOWER:
+            if self.grid[state_2.x][state_2.y].type == StateType.POWER:
+                return self.POWER_REWARD
             else:
                 return 0
+        else:
+            print("Policy not defined")
+            return None
+             
     
     # return True if the current state is the goal state
     def reached_goal(self):
         if self.agent_state.type == StateType.END:
             return True
         return False
-
-
-env = Environment(random_states_distribution=False)
-env.print_grid()
-#env.plot_grid()
-state_1, reward_1 = env.step(env.agent_state, Action.DOWN)
-print((env.agent_state.x, env.agent_state.y))
-print("reward: " + str(reward_1))
-state_2, reward_2 = env.step(env.agent_state, Action.DOWN)
-print((env.agent_state.x, env.agent_state.y))
-print("reward: " + str(reward_2))
-

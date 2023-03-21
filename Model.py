@@ -5,13 +5,15 @@ from Environment import Action
 from operator import itemgetter
 
 class Model:
-    def __init__(self, env, exploration_prob = 1, exploration_decreasing_rate = 0.001, min_exploration_prob = 0.1, max_iter_per_episode = 100, episode_count = 1000):
+    def __init__(self, env, exploration_prob = 1, exploration_decreasing_rate = 0.0001, min_exploration_prob = 0.1, max_iter_per_episode = 100, episode_count = 10000):
         self.environment = env
         self.exploration_prob = exploration_prob
         self.exploration_decreasing_rate = exploration_decreasing_rate
         self.min_exploration_prob = min_exploration_prob
         self.max_iter_per_episode = max_iter_per_episode
         self.episode_count = episode_count
+        self.current_optimal_policy = np.zeros((self.environment.x_size, self.environment.y_size)).astype(Action)
+        self.rewards_per_episode = []
     
     def select_action(self):
         current_x = self.environment.agent_state.x
@@ -50,7 +52,6 @@ class Model:
         
     
     def train(self):
-        rewards_per_episode = []
         for i in range(self.episode_count):
             total_episode_reward = 0
             for j in range(self.max_iter_per_episode):
@@ -67,10 +68,25 @@ class Model:
                     break
                 # exploration-exploitation tradeoff: linear decay implementaiton
                 self.exploration_prob = max(self.exploration_prob - self.exploration_decreasing_rate, self.min_exploration_prob)
-            rewards_per_episode.append(total_episode_reward)
-        return rewards_per_episode
+            self.rewards_per_episode.append(total_episode_reward)
+        return self.get_current_optimal_policy()
 
+    def get_current_optimal_policy(self):
+        for i in range(self.environment.x_size):
+            for j in range(self.environment.y_size):
+                q_values = self.environment.q_table[i][j]
+                index, element = max(enumerate(q_values), key=itemgetter(1))
+                self.current_optimal_policy[i][j] = self.environment.actions[index]
+        return self.current_optimal_policy
     
-    def test(self):
-        pass
+    def print_current_optimal_policy(self):
+        for i in range(self.environment.x_size):
+            for j in range(self.environment.y_size):
+                print(str(self.current_optimal_policy[i][j]).split(".")[1], end=" ")
+            print("\n")
+    
+    def test(self, print_result=True):
+        if (print_result):
+            self.print_current_optimal_policy()
+        return self.current_optimal_policy
 
