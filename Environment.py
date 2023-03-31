@@ -29,9 +29,11 @@ class Policy(Enum):
     MAXPOWER = 2
 
 class Environment:
-    def __init__(self, x_size = 5, y_size = 6, start_x = 0, start_y = 4, policy = Policy.CLOSENESS, lr = 0.8, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False):
+    def __init__(self, x_size = 5, y_size = 6, x_start = 0, y_start = 0, policy = Policy.CLOSENESS, lr = 0.8, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False):
         self.x_size = x_size
         self.y_size = y_size
+        self.x_start = x_start
+        self.y_start = y_start 
         # grid contains state objects
         self.grid = np.zeros((self.x_size, self.y_size)).astype(State)
         self.actions = [Action.UP, Action.RIGHT,Action.DOWN, Action.LEFT]
@@ -121,11 +123,11 @@ class Environment:
         if (action == Action.UP):
             x, y = max(x - 1, 0), y
         elif (action == Action.RIGHT):
-            x, y = x, min(y + 1, self.y_size - 1)
+            x, y = x, min(x + 1, self.y_size - 1)
         elif (action == Action.DOWN):
             x, y = min(x + 1, self.x_size - 1), y
         elif (action == Action.LEFT):
-            x, y = x, max(y - 1, 0)
+            x, y = x, max(x - 1, 0)
         else:
             print("Action not defined")
             return None
@@ -158,3 +160,4 @@ class Environment:
         if self.agent_state.type == StateType.END:
             return True
         return False
+

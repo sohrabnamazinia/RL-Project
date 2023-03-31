@@ -88,5 +88,30 @@ class Model:
     def test(self, print_result=True):
         if (print_result):
             self.print_current_optimal_policy()
+        reachedGoal = False
+        x = self.environment.x_start
+        y = self.environment.y_start
+        path = []
+        while (not reachedGoal):
+            action = self.current_optimal_policy[x][y]
+            path.append(action)
+            if (action == Action.UP):
+                x, y = max(x - 1, 0), y
+            elif (action == Action.RIGHT):
+                x, y = x, min(y + 1, self.environment.y_size - 1)
+            elif (action == Action.DOWN):
+                x, y = min(x + 1, self.environment.x_size - 1), y
+            elif (action == Action.LEFT):
+                x, y = x, max(y - 1, 0)
+            else:
+                print("Action not defined")
+            
+            if ((x, y) == (self.environment.end_state.x, self.environment.end_state.y)):
+                reachedGoal = True
+
+        print("OPTIMAL PATH:")    
+        for action in path:
+            print(str(action).split(".")[1], end=" ")
+
         return self.current_optimal_policy
 
