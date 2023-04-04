@@ -5,13 +5,16 @@ from Environment import Action
 from operator import itemgetter
 
 class Model:
-    def __init__(self, env, exploration_prob = 1, exploration_decreasing_rate = 0.0001, min_exploration_prob = 0.1, max_iter_per_episode = 100, episode_count = 10000):
+    def __init__(self, env, exploration_prob = 1, learning_rate = 0.8, exploration_decreasing_rate = 0.0001, learning_rate_decreasing_rate = 0.0001, min_exploration_prob = 0.1, min_learning_rate = 0.1, max_iter_per_episode = 1000, episode_count = 10000):
         self.environment = env
         self.exploration_prob = exploration_prob
         self.exploration_decreasing_rate = exploration_decreasing_rate
+        self.learning_rate_decreasing_rate = learning_rate_decreasing_rate
         self.min_exploration_prob = min_exploration_prob
         self.max_iter_per_episode = max_iter_per_episode
         self.episode_count = episode_count
+        self.learning_rate = learning_rate
+        self.min_learning_rate = min_learning_rate
         self.current_optimal_policy = np.zeros((self.environment.x_size, self.environment.y_size)).astype(Action)
         self.rewards_per_episode = []
     
@@ -62,11 +65,12 @@ class Model:
                     action = self.select_action()
                 old_state = self.environment.agent_state
                 next_state, reward = self.environment.step(self.environment.agent_state, action)
-                self.environment.q_table[old_state.x][old_state.y][action.value] = (1 - self.environment.lr) * self.environment.q_table[old_state.x][old_state.y][action.value] + self.environment.lr * (reward + self.environment.discount_factor * (max(self.environment.q_table[next_state.x][next_state.y])))
+                self.environment.q_table[old_state.x][old_state.y][action.value] = (1 - self.learning_rate) * self.environment.q_table[old_state.x][old_state.y][action.value] + self.learning_rate * (reward + self.environment.discount_factor * (max(self.environment.q_table[next_state.x][next_state.y])))
                 total_episode_reward += reward
                 if (self.environment.reached_goal()):
                     break
                 # exploration-exploitation tradeoff: linear decay implementaiton
+                self.learning_rate = max(self.learning_rate - self.learning_rate_decreasing_rate, self.min_learning_rate)
                 self.exploration_prob = max(self.exploration_prob - self.exploration_decreasing_rate, self.min_exploration_prob)
             self.rewards_per_episode.append(total_episode_reward)
         return self.get_current_optimal_policy()
@@ -85,14 +89,15 @@ class Model:
                 print(str(self.current_optimal_policy[i][j]).split(".")[1], end=" ")
             print("\n")
     
-    def test(self, print_result=True):
+    def test(self, print_result=True, print_optimal_path=True):
         if (print_result):
             self.print_current_optimal_policy()
         reachedGoal = False
         x = self.environment.x_start
         y = self.environment.y_start
         path = []
-        while (not reachedGoal):
+        infinite_loop_counter = 0
+        while (not reachedGoal and infinite_loop_counter < self.environment.x_size * self.environment.y_size):
             action = self.current_optimal_policy[x][y]
             path.append(action)
             if (action == Action.UP):
@@ -109,9 +114,12 @@ class Model:
             if ((x, y) == (self.environment.end_state.x, self.environment.end_state.y)):
                 reachedGoal = True
 
-        print("OPTIMAL PATH:")    
-        for action in path:
-            print(str(action).split(".")[1], end=" ")
+            infinite_loop_counter += 1
+
+        if print_optimal_path:
+            print("OPTIMAL PATH:")    
+            for action in path:
+                print(str(action).split(".")[1], end=" ")
 
         return self.current_optimal_policy
 

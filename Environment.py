@@ -29,7 +29,7 @@ class Policy(Enum):
     MAXPOWER = 2
 
 class Environment:
-    def __init__(self, x_size = 5, y_size = 6, x_start = 0, y_start = 0, policy = Policy.CLOSENESS, lr = 0.8, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False):
+    def __init__(self, x_size = 5, y_size = 6, x_start = 0, y_start = 0, policy = Policy.CLOSENESS, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False):
         self.x_size = x_size
         self.y_size = y_size
         self.x_start = x_start
@@ -40,7 +40,6 @@ class Environment:
         self.state_size = x_size * y_size
         self.action_size = len(self.actions)
         self.q_table = np.zeros((self.x_size, self.y_size, self.action_size)).astype(float)
-        self.lr = lr
         self.discount_factor = discount_factor
         self.policy = policy
         self.mine_prob = mine_prob
@@ -48,8 +47,8 @@ class Environment:
         # it will be initialized in the reset/hard_rest method
         self.end_state = None
         self.agent_state = None
-        self.MAX_REWARD = 10000000
-        self.MIN_REWARD = -10000000
+        self.MAX_REWARD = 100000
+        self.MIN_REWARD = -1000000000000
         self.POWER_REWARD = 1
         
         if random_states_distribution:
@@ -123,28 +122,32 @@ class Environment:
         if (action == Action.UP):
             x, y = max(x - 1, 0), y
         elif (action == Action.RIGHT):
-            x, y = x, min(x + 1, self.y_size - 1)
+            x, y = x, min(y + 1, self.y_size - 1)
         elif (action == Action.DOWN):
             x, y = min(x + 1, self.x_size - 1), y
         elif (action == Action.LEFT):
-            x, y = x, max(x - 1, 0)
+            x, y = x, max(y - 1, 0)
         else:
             print("Action not defined")
             return None
 
         next_state = self.grid[x][y] 
-        reward = self.compute_reward(next_state, self.policy)
+        reward = self.compute_reward(state, next_state, self.policy)
         self.agent_state = next_state
         return (next_state, reward)
         
+    def euclidean_dist(self, state1, state2):
+        term1 = math.pow(state1.x - state2.x, 2)
+        term2 = math.pow(state1.y - state2.y, 2)
+        return math.sqrt(term1 + term2)
 
-    def compute_reward(self, state_2, policy):
+    def compute_reward(self, state_1, state_2, policy):
         if state_2.type == StateType.END:
                 return self.MAX_REWARD
         elif state_2.type == StateType.MINE:
                 return self.MIN_REWARD
         elif policy == Policy.CLOSENESS:
-                return (1 / math.sqrt(((state_2.x - self.end_state.x)**2 + (state_2.y - self.end_state.y)**2)))
+                return self.euclidean_dist(state_1, self.end_state) - self.euclidean_dist(state_2, self.end_state); 
         elif policy == Policy.MAXPOWER:
             if self.grid[state_2.x][state_2.y].type == StateType.POWER:
                 return self.POWER_REWARD
