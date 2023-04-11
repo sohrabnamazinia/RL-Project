@@ -47,9 +47,9 @@ class Environment:
         # it will be initialized in the reset/hard_rest method
         self.end_state = None
         self.agent_state = None
-        self.MAX_REWARD = 100000
+        self.MAX_REWARD = 100
         self.MIN_REWARD = -1000000000000
-        self.POWER_REWARD = 1
+        self.POWER_REWARD = 200
         
         if random_states_distribution:
             self.reset()
@@ -65,7 +65,7 @@ class Environment:
             
     def reset(self):
         self.clear_grid()
-        self.agent_state = State(random.randint(0, self.x_size), random.randint(0, self.y_size), StateType.BLANK)
+        self.agent_state = State(random.randint(0, self.x_size - 1), random.randint(0, self.y_size-1), StateType.BLANK)
         end_x = random.randint(0, self.x_size)
         end_y = random.randint(0, self.y_size)
         self.grid[end_x][end_y] = State(end_x, end_y, StateType.END)
@@ -149,10 +149,24 @@ class Environment:
         elif policy == Policy.CLOSENESS:
                 return self.euclidean_dist(state_1, self.end_state) - self.euclidean_dist(state_2, self.end_state); 
         elif policy == Policy.MAXPOWER:
-            if self.grid[state_2.x][state_2.y].type == StateType.POWER:
-                return self.POWER_REWARD
-            else:
-                return 0
+            # if self.grid[state_2.x][state_2.y].type == StateType.POWER:
+            #     return self.POWER_REWARD
+            # else:
+            #     return 0
+            reward = 0
+            region = []
+            x = state_2.x
+            y = state_2.y
+            for i in range(-2, 3):
+                for j in range(-2, 3):
+                    candidate = self.grid[min(max(x + i, 0), self.x_size - 1)][min(max(y + j, 0), self.y_size - 1)]
+                    if (candidate not in region):
+                        region.append(candidate)
+            for candidate in region:
+                if candidate.type == StateType.POWER:
+                    reward += 1
+            return reward
+
         else:
             print("Policy not defined")
             return None
