@@ -47,9 +47,9 @@ class Environment:
         # it will be initialized in the reset/hard_rest method
         self.end_state = None
         self.agent_state = None
-        self.MAX_REWARD = 100
+        self.MAX_REWARD = 1000
         self.MIN_REWARD = -1000000000000
-        self.POWER_REWARD = 200
+        #self.POWER_REWARD = 90
         
         if random_states_distribution:
             self.reset()
@@ -117,7 +117,7 @@ class Environment:
             print("\n")
         print("Current Location of Agent: " + str(self.agent_state.x) + ", " + str(self.agent_state.y) + "\n")
 
-    def step(self, state, action):
+    def step(self, state, action, visited_power_states):
         x, y = state.x, state.y
         if (action == Action.UP):
             x, y = max(x - 1, 0), y
@@ -132,7 +132,7 @@ class Environment:
             return None
 
         next_state = self.grid[x][y] 
-        reward = self.compute_reward(state, next_state, self.policy)
+        reward = self.compute_reward(state, next_state, self.policy, visited_power_states)
         self.agent_state = next_state
         return (next_state, reward)
         
@@ -141,7 +141,7 @@ class Environment:
         term2 = math.pow(state1.y - state2.y, 2)
         return math.sqrt(term1 + term2)
 
-    def compute_reward(self, state_1, state_2, policy):
+    def compute_reward(self, state_1, state_2, policy, visited_power_states):
         if state_2.type == StateType.END:
                 return self.MAX_REWARD
         elif state_2.type == StateType.MINE:
@@ -163,7 +163,7 @@ class Environment:
                     if (candidate not in region):
                         region.append(candidate)
             for candidate in region:
-                if candidate.type == StateType.POWER:
+                if (candidate.type == StateType.POWER) and (candidate not in visited_power_states):
                     reward += 1
             return reward
 

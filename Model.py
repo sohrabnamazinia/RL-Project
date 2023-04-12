@@ -1,6 +1,7 @@
 import numpy as np
+import math
 import random
-from Environment import Environment 
+from Environment import Environment, StateType 
 from Environment import Action 
 from operator import itemgetter
 
@@ -18,14 +19,26 @@ class Model:
         self.current_optimal_policy = np.zeros((self.environment.x_size, self.environment.y_size)).astype(Action)
         self.rewards_per_episode = []
     
-    def select_action(self):
+    def apply_boundry_move_constraint(self, Qs, agent_state):
+        if (agent_state.x == 0):
+            Qs[0] = -math.inf
+        if (agent_state.y == 0):
+            Qs[3] = -math.inf
+        if (agent_state.x == self.environment.x_size - 1):
+            Qs[1] = -math.inf
+        if (agent_state.y == self.environment.y_size - 1):
+            Qs[2] = -math.inf
+        return Qs
+
+    def select_action(self, agent_state):
         current_x = self.environment.agent_state.x
         current_y = self.environment.agent_state.y
         Qs = self.environment.q_table[current_x][current_y]
-        action = self.get_best_action(Qs)
+        action = self.get_best_action(Qs, agent_state)
         return action
 
-    def get_best_action(self, Qs):
+    def get_best_action(self, Qs, agent_state):
+        Qs = self.apply_boundry_move_constraint(Qs, agent_state)
         index, element = max(enumerate(Qs), key=itemgetter(1))
         if index == 0:
             return Action.UP
@@ -39,32 +52,44 @@ class Model:
             print("Action not defined")
             return None  
     
-    def select_random_action(self):
-        action_index = random.randint(0, 3)
-        if (action_index == 0):
-            return Action.UP
-        elif (action_index == 1):
-            return Action.RIGHT
-        elif (action_index == 2):
-            return Action.DOWN
-        elif (action_index == 3):
-            return Action.LEFT
-        else:
-            print("Action not defined")
+    def select_random_action(self, agent_state):
+        possible_actions = self.environment.actions.copy()
+        if (agent_state.x == 0):
+            possible_actions.remove(self.environment.actions[0])
+        if (agent_state.x == self.environment.x_size - 1):
+            possible_actions.remove(self.environment.actions[2])
+        if (agent_state.y == 0):
+            possible_actions.remove(self.environment.actions[3])
+        if (agent_state.y == self.environment.y_size - 1):
+            possible_actions.remove(self.environment.actions[1])
+        if len(possible_actions) == 0:
+            print("No Possible Action!")
             return None
+        else:
+            action = random.choice(possible_actions)
+            return action
         
     
     def train(self):
         for i in range(self.episode_count):
             total_episode_reward = 0
+            # keep track of visited states
+            visited_power_states = []
+            # reset agent to some random location
+            self.environment.agent_state = self.environment.grid[random.randint(0, self.environment.x_size - 1)][random.randint(0, self.environment.y_size - 1)]
             for j in range(self.max_iter_per_episode):
                 action = None
                 if (random.random() <= self.exploration_prob):
-                    action = self.select_random_action()
+                    action = self.select_random_action(self.environment.agent_state)
                 else:
-                    action = self.select_action()
+                    action = self.select_action(self.environment.agent_state)
+
                 old_state = self.environment.agent_state
-                next_state, reward = self.environment.step(self.environment.agent_state, action)
+                # update visited_power_states
+                if (old_state.type == StateType.POWER):
+                    visited_power_states.append(old_state)
+
+                next_state, reward = self.environment.step(self.environment.agent_state, action, visited_power_states)
                 self.environment.q_table[old_state.x][old_state.y][action.value] = (1 - self.learning_rate) * self.environment.q_table[old_state.x][old_state.y][action.value] + self.learning_rate * (reward + self.environment.discount_factor * (max(self.environment.q_table[next_state.x][next_state.y])))
                 total_episode_reward += reward
                 if (self.environment.reached_goal()):

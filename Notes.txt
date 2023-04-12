@@ -1,2 +1,0 @@
-1) All about MAX_REWARD
-2) remove a reward when you get it _ change max power reward
