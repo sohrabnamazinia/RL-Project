@@ -26,7 +26,8 @@ class Action(Enum):
 
 class Policy(Enum):
     CLOSENESS = 1,
-    MAXPOWER = 2
+    MAXPOWER = 2,
+    COMBINATION = 3
 
 class Environment:
     def __init__(self, x_size = 5, y_size = 6, x_start = 0, y_start = 0, policy = Policy.CLOSENESS, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False):
@@ -142,17 +143,32 @@ class Environment:
         return math.sqrt(term1 + term2)
 
     def compute_reward(self, state_1, state_2, policy, visited_power_states):
-        if state_2.type == StateType.END:
-                return self.MAX_REWARD
-        elif state_2.type == StateType.MINE:
-                return self.MIN_REWARD
-        elif policy == Policy.CLOSENESS:
-                return self.euclidean_dist(state_1, self.end_state) - self.euclidean_dist(state_2, self.end_state); 
+        if policy == Policy.CLOSENESS:
+            return self.compute_reward_closeness(state_1, state_2)
+        
         elif policy == Policy.MAXPOWER:
-            # if self.grid[state_2.x][state_2.y].type == StateType.POWER:
-            #     return self.POWER_REWARD
-            # else:
-            #     return 0
+            return self.compute_reward_maxpower(state_2, visited_power_states)
+
+        elif policy == Policy.COMBINATION:
+            return self.compute_reward_combination(state_1, state_2, visited_power_states)
+        else:
+            print("Policy not defined")
+            return None
+    
+    def compute_reward_closeness(self, state_1, state_2):
+        if state_2.type == StateType.END:
+            return self.MAX_REWARD
+        elif state_2.type == StateType.MINE:
+            return self.MIN_REWARD
+        else:
+            return self.euclidean_dist(state_1, self.end_state) - self.euclidean_dist(state_2, self.end_state);
+
+    def compute_reward_maxpower(self, state_2, visited_power_states):
+        if state_2.type == StateType.END:
+            return self.MAX_REWARD
+        elif state_2.type == StateType.MINE:
+            return self.MIN_REWARD
+        else:
             reward = 0
             region = []
             x = state_2.x
@@ -165,13 +181,14 @@ class Environment:
             for candidate in region:
                 if (candidate.type == StateType.POWER) and (candidate not in visited_power_states):
                     reward += 1
-            return reward
-
-        else:
-            print("Policy not defined")
-            return None
-             
+            return reward    
     
+    def compute_reward_combination(self, state_1, state_2, visited_power_states):
+        r1 = self.compute_reward_closeness(state_1, state_2)
+        r2 = self.compute_reward_maxpower(state_2, visited_power_states)
+        return r1 + r2
+
+
     # return True if the current state is the goal state
     def reached_goal(self):
         if self.agent_state.type == StateType.END:
