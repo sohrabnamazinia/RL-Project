@@ -67,8 +67,8 @@ class Environment:
     def reset(self):
         self.clear_grid()
         self.agent_state = State(random.randint(0, self.x_size - 1), random.randint(0, self.y_size-1), StateType.BLANK)
-        end_x = random.randint(0, self.x_size)
-        end_y = random.randint(0, self.y_size)
+        end_x = random.randint(0, self.x_size - 1)
+        end_y = random.randint(0, self.y_size - 1)
         self.grid[end_x][end_y] = State(end_x, end_y, StateType.END)
         self.end_state = self.grid[end_x][end_y]
         for i in range(self.x_size):

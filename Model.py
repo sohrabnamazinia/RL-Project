@@ -114,6 +114,20 @@ class Model:
                 print(str(self.current_optimal_policy[i][j]).split(".")[1], end=" ")
             print("\n")
     
+    def step_inference(self, x, y, action):
+        if (action == Action.UP):
+            x, y = max(x - 1, 0), y
+        elif (action == Action.RIGHT):
+            x, y = x, min(y + 1, self.environment.y_size - 1)
+        elif (action == Action.DOWN):
+            x, y = min(x + 1, self.environment.x_size - 1), y
+        elif (action == Action.LEFT):
+            x, y = x, max(y - 1, 0)
+        else:
+            print("Action not defined")
+            return None
+        return (x, y)
+
     def test(self, print_result=True, print_optimal_path=True):
         if (print_result):
             self.print_current_optimal_policy()
@@ -125,16 +139,7 @@ class Model:
         while (not reachedGoal and infinite_loop_counter < self.environment.x_size * self.environment.y_size):
             action = self.current_optimal_policy[x][y]
             path.append(action)
-            if (action == Action.UP):
-                x, y = max(x - 1, 0), y
-            elif (action == Action.RIGHT):
-                x, y = x, min(y + 1, self.environment.y_size - 1)
-            elif (action == Action.DOWN):
-                x, y = min(x + 1, self.environment.x_size - 1), y
-            elif (action == Action.LEFT):
-                x, y = x, max(y - 1, 0)
-            else:
-                print("Action not defined")
+            x, y = self.step_inference(x, y, action)
             
             if ((x, y) == (self.environment.end_state.x, self.environment.end_state.y)):
                 reachedGoal = True
@@ -147,4 +152,70 @@ class Model:
                 print(str(action).split(".")[1], end=" ")
 
         return self.current_optimal_policy
+
+    # the two models have the same environment
+    # this method can ONLY be used if the environments' grids look the same
+    # simply path one of the models' environments to this method 
+    @staticmethod
+    def test_brute_force_combined_inference(model1, model2, environment, max_allowed_path_size=15, stack_max_capacity=1000, print_shortest_paths=True):
+        paths = []
+        shortest_paths = []
+        stack = []
+        shortest_paths_length = math.inf
+        x, y = environment.x_start, environment.y_start
+        start_state = environment.grid[x][y]
+        stack.append((start_state, [], True))
+        stack.append((start_state, [], False))
+
+        while (len(stack) > 0) and (len(stack) < stack_max_capacity):
+            current_state, current_path, use_policy1 = stack.pop()
+            if (current_state == environment.end_state) and (current_path not in paths):
+                paths.append(current_path)
+                if (len(current_path) <= shortest_paths_length):
+                    shortest_paths.append(current_path)
+                    shortest_paths_length = len(current_path)
+            else:
+                if (use_policy1):
+                    action = model1.current_optimal_policy[x][y]
+                    x, y = model1.step_inference(current_state.x, current_state.y, action)
+                    next_state = environment.grid[x][y]
+                    next_path = current_path + [action]
+                    if (len(current_path) < max_allowed_path_size):
+                        stack.append((next_state, next_path, True))
+                    if (len(current_path) < max_allowed_path_size):
+                        stack.append((next_state, next_path, False))
+                else:
+                    action = model2.current_optimal_policy[x][y]
+                    x, y = model2.step_inference(x, y, action)
+                    next_state = environment.grid[x][y]
+                    next_path = current_path + [action]
+                    if (len(current_path) < max_allowed_path_size):
+                        stack.append((next_state, next_path, True))
+                    if (len(current_path) < max_allowed_path_size):
+                        stack.append((next_state, next_path, False))
+        if (print_shortest_paths):
+            for i in range(len(shortest_paths)):
+                print("Path No. " + str(i + 1) + ": ")
+                for action in shortest_paths[i]:
+                    print(str(action).split(".")[1], end=" ")
+                print("\n")
+        return paths, shortest_paths
+    
+    @staticmethod
+    def check_contains_combined_path(paths, combined_path):
+        for path in paths:
+            if len(path) == combined_path:
+                for i in range(len(path)):
+                    if (path[i] != combined_path[i]):
+                        break
+                return path
+        print("No equal path found...")
+        return None                        
+
+
+
+
+
+
+
 
