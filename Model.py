@@ -151,13 +151,13 @@ class Model:
             for action in path:
                 print(str(action).split(".")[1], end=" ")
 
-        return self.current_optimal_policy
+        return path
 
     # the two models have the same environment
     # this method can ONLY be used if the environments' grids look the same
     # simply path one of the models' environments to this method 
     @staticmethod
-    def test_brute_force_combined_inference(model1, model2, environment, max_allowed_path_size=15, stack_max_capacity=1000, print_shortest_paths=True):
+    def test_brute_force_combined_inference(model1, model2, environment, max_allowed_path_size=15, stack_max_capacity=1000, print_shortest_paths=True, k=2):
         paths = []
         shortest_paths = []
         stack = []
@@ -201,16 +201,75 @@ class Model:
                 print("\n")
         return paths, shortest_paths
     
+    # the two models have the same environment
+    # this method can ONLY be used if the environments' grids look the same
+    # simply path one of the models' environments to this method 
+    # choosing top k actionsi n each state for each policy
+    @staticmethod
+    def test_brute_force_combined_inference_2(model1, model2, environment, 
+                                              max_allowed_path_size=15, stack_max_capacity=1000,
+                                              print_shortest_paths=True, k=2):
+        paths = []
+        shortest_paths = []
+        stack = []
+        shortest_paths_length = math.inf
+        x, y = environment.x_start, environment.y_start
+        start_state = environment.grid[x][y]
+        stack.append((start_state, []))
+
+        while (len(stack) > 0) and (len(stack) < stack_max_capacity):
+            current_state, current_path = stack.pop()
+            if (current_state == environment.end_state) and (current_path not in paths):
+                paths.append(current_path)
+                if (len(current_path) <= shortest_paths_length):
+                    shortest_paths_length = len(current_path)
+            else:
+                q_values_model1 = list(model1.environment.q_table[x][y])
+                q_values_model2 = list(model2.environment.q_table[x][y])
+                sorted_q_values_model1 = sorted(q_values_model1, reverse=True)
+                sorted_q_values_model2 = sorted(q_values_model2, reverse=True)
+                candidate_actions_model_1 = []
+                candidate_actions_model_2 = []
+                for i in range(min(k, len(environment.actions))):
+                    max_action_index_model1 = q_values_model1.index(sorted_q_values_model1[i])
+                    max_action_index_model2 = q_values_model2.index(sorted_q_values_model2[i])
+                    action_model_1, action_model_2 = environment.actions[max_action_index_model1], environment.actions[max_action_index_model2]
+                    candidate_actions_model_1.append(action_model_1)
+                    candidate_actions_model_2.append(action_model_2)
+                candidate_actions = list(set(candidate_actions_model_1 + candidate_actions_model_2))
+                for action in candidate_actions:
+                    x, y = model1.step_inference(current_state.x, current_state.y, action)
+                    next_state = environment.grid[x][y]
+                    next_path = current_path + [action]
+                    if (len(current_path) < max_allowed_path_size):
+                        stack.append((next_state, next_path))
+            
+        for path in paths:
+            if (len(path) == shortest_paths_length):
+                shortest_paths.append(path)
+        
+        if (print_shortest_paths):
+            for i in range(len(shortest_paths)):
+                print("Path No. " + str(i + 1) + ": ")
+                for action in shortest_paths[i]:
+                    print(str(action).split(".")[1], end=" ")
+                print("\n")
+
+        return paths, shortest_paths
+
+
     @staticmethod
     def check_contains_combined_path(paths, combined_path):
         for path in paths:
-            if len(path) == combined_path:
+            if len(path) == len(combined_path):
+                counter = 0
                 for i in range(len(path)):
-                    if (path[i] != combined_path[i]):
-                        break
-                return path
+                    if (path[i] == combined_path[i]):
+                        counter += 1
+                if (counter == len(path)):
+                    return True
         print("No equal path found...")
-        return None                        
+        return False                        
 
 
 
