@@ -30,7 +30,7 @@ class Policy(Enum):
     COMBINATION = 3
 
 class Environment:
-    def __init__(self, x_size = 5, y_size = 6, x_start = 0, y_start = 0, policy = Policy.CLOSENESS, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False):
+    def __init__(self, x_size = 10, y_size = 10, x_start = 0, y_start = 0, policy = Policy.CLOSENESS, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False):
         self.x_size = x_size
         self.y_size = y_size
         self.x_start = x_start

@@ -207,7 +207,7 @@ class Model:
     # choosing top k actionsi n each state for each policy
     @staticmethod
     def test_brute_force_combined_inference_2(model1, model2, environment, 
-                                              max_allowed_path_size=15, stack_max_capacity=1000,
+                                              max_allowed_path_size=15, stack_max_capacity=100000,
                                               print_shortest_paths=True, k=2):
         paths = []
         shortest_paths = []
@@ -219,7 +219,8 @@ class Model:
 
         while (len(stack) > 0) and (len(stack) < stack_max_capacity):
             current_state, current_path = stack.pop()
-            if (current_state == environment.end_state) and (current_path not in paths):
+            x, y = current_state.x, current_state.y
+            if (current_state == environment.end_state):
                 paths.append(current_path)
                 if (len(current_path) <= shortest_paths_length):
                     shortest_paths_length = len(current_path)
