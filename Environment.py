@@ -19,10 +19,9 @@ class StateType(Enum):
     END = 5
 
 class Action(Enum):
-    UP = 0
-    RIGHT = 1
-    DOWN = 2
-    LEFT = 3
+    RIGHT = 0
+    DOWN = 1
+
 
 class Policy(Enum):
     CLOSENESS = 1,
@@ -30,14 +29,14 @@ class Policy(Enum):
     COMBINATION = 3
 
 class Environment:
-    def __init__(self, x_size = 10, y_size = 10, x_start = 0, y_start = 0, policy = Policy.CLOSENESS, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False):
+    def __init__(self, x_size = 5, y_size = 6, x_start = 0, y_start = 0, policy = Policy.CLOSENESS, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False, has_mine = False):
         self.x_size = x_size
         self.y_size = y_size
         self.x_start = x_start
         self.y_start = y_start 
         # grid contains state objects
         self.grid = np.zeros((self.x_size, self.y_size)).astype(State)
-        self.actions = [Action.UP, Action.RIGHT,Action.DOWN, Action.LEFT]
+        self.actions = [Action.RIGHT,Action.DOWN]
         self.state_size = x_size * y_size
         self.action_size = len(self.actions)
         self.q_table = np.zeros((self.x_size, self.y_size, self.action_size)).astype(float)
@@ -55,7 +54,7 @@ class Environment:
         if random_states_distribution:
             self.reset()
         else:
-            self.hard_reset()
+            self.hard_reset(has_mine)
 
     # sets all the grid as blank type
     def clear_grid(self):
@@ -83,20 +82,31 @@ class Environment:
                         self.grid[i][j] = State(i, j, StateType.BLANK)
         return self.grid            
 
-    def hard_reset(self):
-        self.clear_grid()
-        self.agent_state = State(0, 0, StateType.BLANK)
-        self.grid[0][2].type = StateType.POWER
-        self.grid[2][2].type = StateType.POWER
-        self.grid[2][5].type = StateType.POWER
-        self.grid[4][1].type = StateType.POWER
-        self.grid[1][1].type = StateType.MINE
-        self.grid[1][4].type = StateType.MINE
-        self.grid[3][0].type = StateType.MINE
-        self.grid[3][3].type = StateType.MINE
-        self.grid[4][4].type = StateType.END
-        self.end_state = self.grid[4][4]
-        return self.grid
+    def hard_reset(self, has_mine):
+        if has_mine:
+            self.clear_grid()
+            self.agent_state = State(0, 0, StateType.BLANK)
+            self.grid[0][2].type = StateType.POWER
+            self.grid[2][2].type = StateType.POWER
+            self.grid[2][5].type = StateType.POWER
+            self.grid[4][1].type = StateType.POWER
+            self.grid[1][1].type = StateType.MINE
+            self.grid[1][4].type = StateType.MINE
+            self.grid[3][0].type = StateType.MINE
+            self.grid[3][3].type = StateType.MINE
+            self.grid[4][4].type = StateType.END
+            self.end_state = self.grid[4][4]
+            return self.grid
+        else:
+            self.clear_grid()
+            self.agent_state = State(0, 0, StateType.BLANK)
+            self.grid[0][2].type = StateType.POWER
+            self.grid[2][2].type = StateType.POWER
+            self.grid[2][5].type = StateType.POWER
+            self.grid[4][1].type = StateType.POWER
+            self.grid[4][4].type = StateType.END
+            self.end_state = self.grid[4][4]
+            return self.grid
 
     def convert_grid_to_digits(self):
         result = np.zeros((self.x_size, self.y_size))
@@ -120,19 +130,18 @@ class Environment:
 
     def step(self, state, action, visited_power_states):
         x, y = state.x, state.y
-        if (action == Action.UP):
-            x, y = max(x - 1, 0), y
-        elif (action == Action.RIGHT):
+        if (action == Action.RIGHT):
             x, y = x, min(y + 1, self.y_size - 1)
         elif (action == Action.DOWN):
             x, y = min(x + 1, self.x_size - 1), y
-        elif (action == Action.LEFT):
-            x, y = x, max(y - 1, 0)
         else:
             print("Action not defined")
-            return None
+            x, y = float("inf"), float("inf")
 
-        next_state = self.grid[x][y] 
+        if x != float("inf") and y != float("inf"):
+            next_state = self.grid[x][y]
+        else:
+            next_state = None
         reward = self.compute_reward(state, next_state, self.policy, visited_power_states)
         self.agent_state = next_state
         return (next_state, reward)
@@ -143,6 +152,9 @@ class Environment:
         return math.sqrt(term1 + term2)
 
     def compute_reward(self, state_1, state_2, policy, visited_power_states):
+
+        if state_2 == None:
+            return 1000 * self.MIN_REWARD
         if policy == Policy.CLOSENESS:
             return self.compute_reward_closeness(state_1, state_2)
         
