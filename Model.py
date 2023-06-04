@@ -90,7 +90,9 @@ class Model:
                 next_state, reward = self.environment.step(self.environment.agent_state, action, visited_power_states)
                 if next_state == None:
                     break
-                self.environment.q_table[old_state.x][old_state.y][action.value] = (1 - self.learning_rate) * self.environment.q_table[old_state.x][old_state.y][action.value] + self.learning_rate * (reward + self.environment.discount_factor * (max(self.environment.q_table[next_state.x][next_state.y])))
+                self.environment.q_table[old_state.x][old_state.y][action.value] = \
+                (1 - self.learning_rate) * self.environment.q_table[old_state.x][old_state.y][action.value] + \
+                self.learning_rate * (reward + self.environment.discount_factor * (max(self.environment.q_table[next_state.x][next_state.y])))
                 total_episode_reward += reward
                 if (self.environment.reached_goal()):
                     break

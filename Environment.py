@@ -207,3 +207,24 @@ class Environment:
             return True
         return False
 
+    def compute_reward_ground_truth_path(self, path):
+        reward = 0
+        # init current state with the start state
+        current_state = self.grid[self.x_start][self.y_start]
+        visited_power_states = []
+        if (self.grid[current_state.x][current_state.y].type == StateType.POWER):
+                visited_power_states.append(current_state)
+        for action in path:
+            next_state, r = self.step(current_state, action, visited_power_states)
+            reward += r
+            current_state = next_state
+            if (self.grid[current_state.x][current_state.y].type == StateType.POWER):
+                visited_power_states.append(current_state)
+        return reward
+
+
+    def compute_reward_dag_paths(self, paths):
+        result = []
+        for path in paths:
+            pass
+        return result
