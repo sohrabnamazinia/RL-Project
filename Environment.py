@@ -222,9 +222,32 @@ class Environment:
                 visited_power_states.append(current_state)
         return reward
 
+    @staticmethod
+    def getActionFromStateTuples(state1, state2):
 
-    def compute_reward_dag_paths(self, paths):
-        result = []
+        x1, y1 = state1[0], state1[1]
+        x2, y2 = state2[0], state2[1]
+        action = None
+
+        if x1 == x2 and y1 + 1 == y2:
+            action = Action.RIGHT
+        elif x1 + 1 == x2 and y1 == y2:
+            action = Action.DOWN
+
+        return action
+
+    def compute_reward_dag_paths(self, paths, print_rewards=False):
+        rewards = []
         for path in paths:
-            pass
-        return result
+            reward = 0
+            visited_power_states = []
+            for i in range(len(path) - 1):
+                state_tuple_0, state_tuple_1 = path[i], path[i + 1]
+                action = Environment.getActionFromStateTuples(state_tuple_0, state_tuple_1)
+                state_0 = self.grid[state_tuple_0[0]][state_tuple_0[1]]
+                state_1, r = self.step(state_0, action, visited_power_states)
+                reward += r
+                if (state_0.type == StateType.POWER):
+                    visited_power_states.append(state_0)
+            rewards.append(reward)
+        return rewards

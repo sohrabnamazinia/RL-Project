@@ -1,6 +1,7 @@
 from Model import Model
 from Environment import Environment
 from Environment import Policy
+import matplotlib.pyplot as plt
 
 
 env1 = Environment(policy=Policy.CLOSENESS)
@@ -31,6 +32,18 @@ graph = Model.buildDAG(env3, model3, brute_force_paths)
 boundry, adjList = Model.backtrack(graph, env3, model3, visited_power_states_3)
 G = Model.pruning(graph, model3, env3, adjList, boundry)
 paths = Model.findPath(env3, G)
+rewards = model3.environment.compute_reward_dag_paths(paths)
+print("\n******************************\n")
+rewards_difference = [ground_truth_cumulative_reward - reward for reward in rewards]
+plt.plot(rewards_difference)
+plt.xlabel('Path Index')
+plt.ylabel('Ground truth reward - DAG Paths Rewards')
+plt.title('Rewards Difference')
+plt.show()
+print("Ground truth reward - DAG Paths Rewards has been plotted")
+print("\n******************************\n")
+
+
 
 # NOTE: For now, we do not need this method because we believe our brute force method
 #       works properly. Remember that this method does not work with brute_force_version_3
