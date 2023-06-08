@@ -5,6 +5,7 @@ from matplotlib.colors import ListedColormap
 import random
 import math
 
+
 class State:
     def __init__(self, x, y, stateType):
         self.x = x
@@ -146,10 +147,14 @@ class Environment:
         self.agent_state = next_state
         return (next_state, reward)
         
-    def euclidean_dist(self, state1, state2):
-        term1 = math.pow(state1.x - state2.x, 2)
-        term2 = math.pow(state1.y - state2.y, 2)
-        return math.sqrt(term1 + term2)
+    def manhattan_dist(self, state1, state2):
+        #term1 = math.pow(state1.x - state2.x, 2)
+        #term2 = math.pow(state1.y - state2.y, 2)
+        
+        term1 = abs(state1.x - state2.x)
+        term2 = abs(state1.y - state2.y)
+        return (term1 + term2)
+        #return math.sqrt(term1 + term2)
 
     def compute_reward(self, state_1, state_2, policy, visited_power_states):
 
@@ -173,7 +178,7 @@ class Environment:
         elif state_2.type == StateType.MINE:
             return self.MIN_REWARD
         else:
-            return self.euclidean_dist(state_1, self.end_state) - self.euclidean_dist(state_2, self.end_state);
+            return self.manhattan_dist(state_1, self.end_state) - self.manhattan_dist(state_2, self.end_state)
 
     def compute_reward_maxpower(self, state_2, visited_power_states):
         if state_2.type == StateType.END:
@@ -215,7 +220,7 @@ class Environment:
         if (self.grid[current_state.x][current_state.y].type == StateType.POWER):
                 visited_power_states.append(current_state)
         for action in path:
-            next_state, r = self.step(current_state, action, visited_power_states)
+            next_state, r = self.step(current_state, action, [])
             reward += r
             current_state = next_state
             if (self.grid[current_state.x][current_state.y].type == StateType.POWER):
@@ -238,6 +243,7 @@ class Environment:
 
     def compute_reward_dag_paths(self, paths, print_rewards=False):
         rewards = []
+        counter = 0
         for path in paths:
             reward = 0
             visited_power_states = []
@@ -245,9 +251,16 @@ class Environment:
                 state_tuple_0, state_tuple_1 = path[i], path[i + 1]
                 action = Environment.getActionFromStateTuples(state_tuple_0, state_tuple_1)
                 state_0 = self.grid[state_tuple_0[0]][state_tuple_0[1]]
-                state_1, r = self.step(state_0, action, visited_power_states)
+                state_1, r = self.step(state_0, action, [])
                 reward += r
                 if (state_0.type == StateType.POWER):
                     visited_power_states.append(state_0)
+            # this is for debugging        
+            if (reward > 2028):
+                actions = []
+                for i in range(len(path) - 1):
+                    actions.append(str(self.getActionFromStateTuples(path[i], path[i + 1])).split(".")[1])
+                print("Path index:" + str(counter) + str(actions))
+            counter += 1
             rewards.append(reward)
         return rewards

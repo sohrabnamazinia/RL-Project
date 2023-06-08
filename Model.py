@@ -331,7 +331,6 @@ class Model:
         return removableEdgeLst
 
     @staticmethod
-
     def buildDAG(env, model, lst):
 
         edges = set()
