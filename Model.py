@@ -10,7 +10,7 @@ from collections import deque
 from functools import reduce
 
 class Model:
-    def __init__(self, env, exploration_prob = 1, learning_rate = 0.8, exploration_decreasing_rate = 0.0001, learning_rate_decreasing_rate = 0.0001, min_exploration_prob = 0.1, min_learning_rate = 0.1, max_iter_per_episode = 1000, episode_count = 10000):
+    def __init__(self, env, exploration_prob = 1, learning_rate = 0.8, exploration_decreasing_rate = 0.0001, learning_rate_decreasing_rate = 0.0001, min_exploration_prob = 0.1, min_learning_rate = 0.1, max_iter_per_episode = 15, episode_count = 10000):
         self.environment = env
         self.exploration_prob = exploration_prob
         self.exploration_decreasing_rate = exploration_decreasing_rate
@@ -331,7 +331,7 @@ class Model:
         return removableEdgeLst
 
     @staticmethod
-    def buildDAG(env, model, lst):
+    def buildDAG(env, model, lst, plot_dag=True):
 
         edges = set()
         for i in range(len(lst)):
@@ -358,12 +358,13 @@ class Model:
             # print("Cycle", nx.find_cycle(G))
         print("Is Graph a DAG?", nx.is_directed_acyclic_graph(G))
 
-        pos = nx.spring_layout(G)
-        nx.draw_networkx_nodes(G, pos, cmap=plt.get_cmap('jet'), node_size=500, node_color="lightblue")
-        nx.draw_networkx_edges(G, pos, edge_color='b', edge_cmap=plt.cm.Blues, arrows=True, width=2.5,  arrowstyle="->", arrowsize=15)
-        nx.draw_networkx_labels(G, pos)
+        if plot_dag:
+            pos = nx.spring_layout(G)
+            nx.draw_networkx_nodes(G, pos, cmap=plt.get_cmap('jet'), node_size=500, node_color="lightblue")
+            nx.draw_networkx_edges(G, pos, edge_color='b', edge_cmap=plt.cm.Blues, arrows=True, width=2.5,  arrowstyle="->", arrowsize=15)
+            nx.draw_networkx_labels(G, pos)
 
-        plt.show()
+            plt.show()
 
         return G
 

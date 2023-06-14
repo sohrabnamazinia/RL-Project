@@ -30,7 +30,7 @@ class Policy(Enum):
     COMBINATION = 3
 
 class Environment:
-    def __init__(self, x_size = 5, y_size = 6, x_start = 0, y_start = 0, policy = Policy.CLOSENESS, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False, has_mine = False):
+    def __init__(self, x_size = 5, y_size = 6, x_start = 0, y_start = 0, policy = Policy.CLOSENESS, discount_factor = 0.95, mine_prob = 0.13, power_prob = 0.13, random_states_distribution = False, hard_reset_index = 1, has_mine = False):
         self.x_size = x_size
         self.y_size = y_size
         self.x_start = x_start
@@ -54,8 +54,12 @@ class Environment:
         
         if random_states_distribution:
             self.reset()
+        elif hard_reset_index == 1:
+            self.hard_reset_1(has_mine)
+        elif hard_reset_index == 2:
+            self.hard_reset_2()
         else:
-            self.hard_reset(has_mine)
+            print("Hard reset type not specified")
 
     # sets all the grid as blank type
     def clear_grid(self):
@@ -83,10 +87,10 @@ class Environment:
                         self.grid[i][j] = State(i, j, StateType.BLANK)
         return self.grid            
 
-    def hard_reset(self, has_mine):
+    def hard_reset_1(self, has_mine):
         if has_mine:
             self.clear_grid()
-            self.agent_state = State(0, 0, StateType.BLANK)
+            self.agent_state = self.grid[0][0]
             self.grid[0][2].type = StateType.POWER
             self.grid[2][2].type = StateType.POWER
             self.grid[2][5].type = StateType.POWER
@@ -100,7 +104,7 @@ class Environment:
             return self.grid
         else:
             self.clear_grid()
-            self.agent_state = State(0, 0, StateType.BLANK)
+            self.agent_state = self.grid[0][0]
             self.grid[0][2].type = StateType.POWER
             self.grid[2][2].type = StateType.POWER
             self.grid[2][5].type = StateType.POWER
@@ -108,6 +112,22 @@ class Environment:
             self.grid[4][4].type = StateType.END
             self.end_state = self.grid[4][4]
             return self.grid
+
+    def hard_reset_2(self):
+        self.clear_grid()
+        self.agent_state = self.grid[0][0]
+        self.grid[0][2].type = StateType.POWER
+        self.grid[0][4].type = StateType.POWER
+        self.grid[0][6].type = StateType.POWER
+        self.grid[0][8].type = StateType.POWER
+        self.grid[1][4].type = StateType.POWER
+        self.grid[2][5].type = StateType.POWER
+        self.grid[4][2].type = StateType.POWER
+        self.grid[6][4].type = StateType.POWER
+        self.grid[7][7].type = StateType.POWER
+        self.grid[9][9].type = StateType.END
+        self.end_state = self.grid[9][9]
+        return self.grid
 
     def convert_grid_to_digits(self):
         result = np.zeros((self.x_size, self.y_size))
@@ -241,7 +261,7 @@ class Environment:
 
         return action
 
-    def compute_reward_dag_paths(self, paths, print_rewards=False):
+    def compute_reward_dag_paths(self, paths, ground_truth_reward, print_rewards=False):
         rewards = []
         counter = 0
         for path in paths:
@@ -256,11 +276,11 @@ class Environment:
                 if (state_0.type == StateType.POWER):
                     visited_power_states.append(state_0)
             # this is for debugging        
-            if (reward > 2028):
+            if (reward > ground_truth_reward):
                 actions = []
                 for i in range(len(path) - 1):
                     actions.append(str(self.getActionFromStateTuples(path[i], path[i + 1])).split(".")[1])
-                print("Path index:" + str(counter) + str(actions))
+                print("Path index: " + str(counter) + ", with cumulative reward: " + str(reward) + "\n" + str(actions))
             counter += 1
             rewards.append(reward)
         return rewards
