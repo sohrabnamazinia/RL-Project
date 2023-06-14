@@ -100,6 +100,7 @@ class Model:
                 self.learning_rate = max(self.learning_rate - self.learning_rate_decreasing_rate, self.min_learning_rate)
                 self.exploration_prob = max(self.exploration_prob - self.exploration_decreasing_rate, self.min_exploration_prob)
             self.rewards_per_episode.append(total_episode_reward)
+        self.environment.agent_state = self.environment.grid[self.environment.x_start][self.environment.y_start]
         return self.get_current_optimal_policy(), visited_power_states
 
     def get_current_optimal_policy(self):
@@ -295,6 +296,7 @@ class Model:
                 for action in candidate_actions:
                     x, y = model1.step_inference(current_state.x, current_state.y, action)
                     next_state = environment.grid[x][y]
+                    
                     next_path = current_path + [((current_state.x, current_state.y), (next_state.x, next_state.y))]
                     if (len(current_path) < max_allowed_path_size):
                         stack.append((next_state, next_path))

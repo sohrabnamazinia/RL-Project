@@ -19,12 +19,12 @@ discount_factors = set_discount_factors(experiments_count)
 
 for i in range(experiments_count):
     d_f = discount_factors[i]
-    env1 = Environment(policy=Policy.CLOSENESS, discount_factor=d_f)
-    env2 = Environment(policy=Policy.MAXPOWER, discount_factor=d_f)
-    env3 = Environment(policy=Policy.COMBINATION, discount_factor=d_f)
-    model1 = Model(env1, episode_count=1000)
-    model2 = Model(env2, episode_count=1000)
-    model3 = Model(env3, episode_count=1000)
+    env1 = Environment(policy=Policy.CLOSENESS, discount_factor=d_f, x_size=100, y_size=100, hard_reset_index=3)
+    env2 = Environment(policy=Policy.MAXPOWER, discount_factor=d_f, x_size=100, y_size=100, hard_reset_index=3)
+    env3 = Environment(policy=Policy.COMBINATION, discount_factor=d_f, x_size=100, y_size=100, hard_reset_index=3)
+    model1 = Model(env1, episode_count=10000, max_iter_per_episode=200)
+    model2 = Model(env2, episode_count=10000, max_iter_per_episode=200)
+    model3 = Model(env3, episode_count=10000, max_iter_per_episode=200)
     print("Environment for discount_facor = " + str(d_f))
     model1.environment.print_grid()
     train_result_1, visited_power_states_1 = model1.train()

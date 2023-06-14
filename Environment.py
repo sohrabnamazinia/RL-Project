@@ -58,6 +58,8 @@ class Environment:
             self.hard_reset_1(has_mine)
         elif hard_reset_index == 2:
             self.hard_reset_2()
+        elif hard_reset_index == 3:
+            self.hard_reset_3()
         else:
             print("Hard reset type not specified")
 
@@ -87,6 +89,7 @@ class Environment:
                         self.grid[i][j] = State(i, j, StateType.BLANK)
         return self.grid            
 
+    # original env (5*6)
     def hard_reset_1(self, has_mine):
         if has_mine:
             self.clear_grid()
@@ -113,6 +116,7 @@ class Environment:
             self.end_state = self.grid[4][4]
             return self.grid
 
+    # 10*10 env
     def hard_reset_2(self):
         self.clear_grid()
         self.agent_state = self.grid[0][0]
@@ -127,6 +131,17 @@ class Environment:
         self.grid[7][7].type = StateType.POWER
         self.grid[9][9].type = StateType.END
         self.end_state = self.grid[9][9]
+        return self.grid
+    
+    # 100*100 env
+    def hard_reset_3(self):
+        self.clear_grid()
+        self.agent_state = self.grid[0][0]
+        for i in range(self.x_size):
+           self.grid[i][i].type = StateType.POWER 
+        self.grid[0][0].type = StateType.BLANK
+        self.grid[99][99].type = StateType.END 
+        self.end_state = self.grid[99][99]
         return self.grid
 
     def convert_grid_to_digits(self):
