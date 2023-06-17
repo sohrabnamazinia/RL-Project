@@ -294,9 +294,11 @@ class Model:
                     candidate_actions_model_2.append(action_model_2)
                 candidate_actions = list(set(candidate_actions_model_1 + candidate_actions_model_2))
                 for action in candidate_actions:
+                    #old_x, old_y = current_state.x, current_state.y
                     x, y = model1.step_inference(current_state.x, current_state.y, action)
                     next_state = environment.grid[x][y]
-                    
+                    #if (next_state.x == old_x) and (next_state.y == old_y):
+                     #   continue
                     next_path = current_path + [((current_state.x, current_state.y), (next_state.x, next_state.y))]
                     if (len(current_path) < max_allowed_path_size):
                         stack.append((next_state, next_path))

@@ -25,3 +25,12 @@ def plot_discount_factors(discount_factors, pruning_percentages):
     plt.xticks(x)
     plt.plot(x, y)
     plt.show()
+
+def check_path_in_paths(self, key_path, paths):
+    for path in paths:
+        if len(key_path) == len(path):
+            for i in range(len(path)):
+                if (path[i] != key_path[i]):
+                    break
+            return True
+    return False
