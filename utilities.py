@@ -26,11 +26,26 @@ def plot_discount_factors(discount_factors, pruning_percentages):
     plt.plot(x, y)
     plt.show()
 
-def check_path_in_paths(self, key_path, paths):
+def check_path_in_paths(key_path, paths):
     for path in paths:
-        if len(key_path) == len(path):
-            for i in range(len(path)):
-                if (path[i] != key_path[i]):
-                    break
+        count = 0
+        if len(key_path) + 1 != len(path):
+            continue
+        for i in range(len(key_path)):
+            if (key_path[i][0] == path[i]):
+                count += 1
+        if (key_path[len(path) - 2][1] == path[len(path) - 1]):
+                count += 1
+        if count == len(path):
             return True
     return False
+
+def plot_recalls(env_areas, recalls):
+    x = np.array(env_areas)
+    y = np.array(recalls)
+    plt.xlabel("Environment side length")
+    plt.ylabel("Recall Percentage")
+    plt.title("Recall Percentage Experiment")
+    plt.xticks(x)
+    plt.plot(x, y)
+    plt.show()

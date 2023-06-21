@@ -60,6 +60,8 @@ class Environment:
             self.hard_reset_2()
         elif hard_reset_index == 3:
             self.hard_reset_3()
+        elif hard_reset_index == 4:
+            self.hard_reset_4()
         else:
             print("Hard reset type not specified")
 
@@ -143,6 +145,17 @@ class Environment:
         self.grid[99][99].type = StateType.END 
         self.end_state = self.grid[99][99]
         return self.grid
+    
+    # This is for test_recall
+    def hard_reset_4(self):
+        self.clear_grid()
+        self.agent_state = self.grid[self.x_start][self.y_start]
+        for i in range(self.x_size):
+           self.grid[i][i].type = StateType.POWER 
+        self.grid[self.x_start][self.y_start].type = StateType.BLANK
+        self.grid[self.x_size - 1][self.y_size - 1].type = StateType.END 
+        self.end_state = self.grid[self.x_size - 1][self.y_size - 1]
+        return self.grid
 
     def convert_grid_to_digits(self):
         result = np.zeros((self.x_size, self.y_size))
@@ -171,7 +184,7 @@ class Environment:
         elif (action == Action.DOWN):
             x, y = min(x + 1, self.x_size - 1), y
         else:
-            print("Action not defined")
+            #print("Action not defined")
             x, y = float("inf"), float("inf")
 
         if x != float("inf") and y != float("inf"):
@@ -307,7 +320,7 @@ class Environment:
             reward = 0
             visited_power_states = []
             for i in range(len(path) - 1):
-                state_tuple_0, state_tuple_1 = path[i], path[i + 1]
+                state_tuple_0, state_tuple_1 = path[i][0], path[i][1]
                 action = Environment.getActionFromStateTuples(state_tuple_0, state_tuple_1)
                 state_0 = self.grid[state_tuple_0[0]][state_tuple_0[1]]
                 state_1, r = self.step(state_0, action, [])
