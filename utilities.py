@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import networkx as nx
 
 def calculate_pruning_percentage(paths, paths_pruned):
     a = len(paths)
@@ -40,6 +41,13 @@ def check_path_in_paths(key_path, paths):
             return True
     return False
 
+def union_dags(G1, G2):
+    result = nx.DiGraph()
+    result.add_nodes_from(G1.nodes)
+    result.add_edges_from(G1.edges)
+    result.add_edges_from(G2.edges)
+    return result
+
 def plot_recalls(env_areas, recalls):
     x = np.array(env_areas)
     y = np.array(recalls)
@@ -48,4 +56,11 @@ def plot_recalls(env_areas, recalls):
     plt.title("Recall Percentage Experiment")
     plt.xticks(x)
     plt.plot(x, y)
+    plt.show()
+
+def plot_dag(G):
+    pos = nx.spring_layout(G)
+    nx.draw_networkx_nodes(G, pos, cmap=plt.get_cmap('jet'), node_size=500, node_color="lightblue")
+    nx.draw_networkx_edges(G, pos, edge_color='b', edge_cmap=plt.cm.Blues, arrows=True, width=2.5,  arrowstyle="->", arrowsize=15)
+    nx.draw_networkx_labels(G, pos)
     plt.show()

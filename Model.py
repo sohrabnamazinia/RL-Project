@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import random
+import utilities
 from Environment import Environment, StateType 
 from Environment import Action 
 from operator import itemgetter
@@ -22,6 +23,8 @@ class Model:
         self.min_learning_rate = min_learning_rate
         self.current_optimal_policy = np.zeros((self.environment.x_size, self.environment.y_size)).astype(Action)
         self.rewards_per_episode = []
+        # This will be initialized after training
+        self.dag = nx.DiGraph()
     
     def apply_boundry_move_constraint(self, Qs, agent_state):
         if (agent_state.x == self.environment.x_size - 1):
@@ -72,6 +75,7 @@ class Model:
             visited_power_states = []
             # reset agent to some random location
             self.environment.agent_state = self.environment.grid[random.randint(0, self.environment.x_size - 1)][random.randint(0, self.environment.y_size - 1)]
+            path_to_goal = set()
             for j in range(self.max_iter_per_episode):
                 action = None
                 if (random.random() <= self.exploration_prob):
@@ -88,6 +92,15 @@ class Model:
                     visited_power_states.append(old_state)
 
                 next_state, reward = self.environment.step(self.environment.agent_state, action, visited_power_states)
+
+                # add edge to candidate edge list fpr DAG
+                old_tuple = (old_state.x, old_state.y)
+                new_tuple = (next_state.x, next_state.y)
+                e = old_tuple, new_tuple
+                if (e[0] != e[1]):
+                    path_to_goal.add(e)
+
+
                 if next_state == None:
                     break
                 self.environment.q_table[old_state.x][old_state.y][action.value] = \
@@ -95,6 +108,8 @@ class Model:
                 self.learning_rate * (reward + self.environment.discount_factor * (max(self.environment.q_table[next_state.x][next_state.y])))
                 total_episode_reward += reward
                 if (self.environment.reached_goal()):
+                    edge_list = list(path_to_goal)
+                    self.dag.add_edges_from(edge_list)
                     break
                 # exploration-exploitation tradeoff: linear decay implementaiton
                 self.learning_rate = max(self.learning_rate - self.learning_rate_decreasing_rate, self.min_learning_rate)
@@ -363,12 +378,7 @@ class Model:
         print("Is Graph a DAG?", nx.is_directed_acyclic_graph(G))
 
         if plot_dag:
-            pos = nx.spring_layout(G)
-            nx.draw_networkx_nodes(G, pos, cmap=plt.get_cmap('jet'), node_size=500, node_color="lightblue")
-            nx.draw_networkx_edges(G, pos, edge_color='b', edge_cmap=plt.cm.Blues, arrows=True, width=2.5,  arrowstyle="->", arrowsize=15)
-            nx.draw_networkx_labels(G, pos)
-
-            plt.show()
+            utilities
 
         return G
 
