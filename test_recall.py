@@ -31,21 +31,23 @@ def run_one_test(start_x, start_y, env_side_length):
     print(f"Combined policy - recall test for start_x = {start_x}, start_y = {start_y}, env_side_length = {env_side_length}")
     model3_optimal_path = model3.test()
     print("\n******************************\n")
-    print(f"For recall test for start_x = {start_x}, start_y = {start_y}, env_side_length = {env_side_length}" + ", Brute Force for finding the combined policy:\n")
-    brute_force_paths, shortest_paths = Model.test_brute_force_combined_inference_3(model1, model2, env1, k=2, print_shortest_paths=False, max_allowed_path_size=model3.max_iter_per_episode)
-    print("\n******************************\n")
-    max_reward_brute_force_path = env3.get_max_reward_brute_force_path(brute_force_paths)
-    graph = Model.buildDAG(env3, model3, brute_force_paths)
-    boundry, adjList = Model.backtrack(graph, env3, model3, visited_power_states_3)
-    G = Model.pruning(graph, model3, env3, adjList, boundry)
+    dag = utilities.union_dags(model1.dag, model2.dag)
+    all_paths = Model.findPath(env3, dag)
+    #print(f"For recall test for start_x = {start_x}, start_y = {start_y}, env_side_length = {env_side_length}" + ", Brute Force for finding the combined policy:\n")
+    #brute_force_paths, shortest_paths = Model.test_brute_force_combined_inference_3(model1, model2, env1, k=2, print_shortest_paths=False, max_allowed_path_size=model3.max_iter_per_episode)
+    #print("\n******************************\n")
+    max_reward_all_paths = env3.get_max_reward_brute_force_path(all_paths)
+    #graph = Model.buildDAG(env3, model3, all_paths)
+    boundry, adjList = Model.backtrack(dag, env3, model3, visited_power_states_3)
+    G = Model.pruning(dag, model3, env3, adjList, boundry)
     paths = Model.findPath(env3, G)
-    result = utilities.check_path_in_paths(max_reward_brute_force_path, paths)
+    result = utilities.check_path_in_paths(max_reward_all_paths, paths)
     print("\n******************************\n")
     return result
 
 
-diff_env_count = 2
-diff_start_count = 2
+diff_env_count = 20
+diff_start_count = 10
 environment_size_lengths = []
 for i in range(diff_env_count):
     environment_size_lengths.append((i + 1) * 5)

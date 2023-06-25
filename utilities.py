@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import networkx as nx
 
+# paths = brute force paths
 def calculate_pruning_percentage(paths, paths_pruned):
     a = len(paths)
     b = len(paths_pruned)
@@ -27,15 +28,29 @@ def plot_discount_factors(discount_factors, pruning_percentages):
     plt.plot(x, y)
     plt.show()
 
+# This is an old version function, and might be used later
+# the new version is provided
+# def check_path_in_paths(key_path, paths):
+#     for path in paths:
+#         count = 0
+#         if len(key_path) + 1 != len(path):
+#             continue
+#         for i in range(len(key_path)):
+#             if (key_path[i][0] == path[i]):
+#                 count += 1
+#         if (key_path[len(path) - 2][1] == path[len(path) - 1]):
+#                 count += 1
+#         if count == len(path):
+#             return True
+#     return False
+
 def check_path_in_paths(key_path, paths):
     for path in paths:
         count = 0
-        if len(key_path) + 1 != len(path):
+        if len(key_path) != len(path):
             continue
         for i in range(len(key_path)):
-            if (key_path[i][0] == path[i]):
-                count += 1
-        if (key_path[len(path) - 2][1] == path[len(path) - 1]):
+            if (key_path[i] == path[i]):
                 count += 1
         if count == len(path):
             return True

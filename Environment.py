@@ -313,6 +313,27 @@ class Environment:
             rewards.append(reward)
         return rewards
     
+    # This is an old version function, and might be used later
+    # the new implementation of the same function has been provided
+    # def get_max_reward_brute_force_path(self, paths):
+    #     max_reward = -math.inf
+    #     max_reward_path = None
+    #     for path in paths:
+    #         reward = 0
+    #         visited_power_states = []
+    #         for i in range(len(path) - 1):
+    #             state_tuple_0, state_tuple_1 = path[i][0], path[i][1]
+    #             action = Environment.getActionFromStateTuples(state_tuple_0, state_tuple_1)
+    #             state_0 = self.grid[state_tuple_0[0]][state_tuple_0[1]]
+    #             state_1, r = self.step(state_0, action, [])
+    #             reward += r
+    #             if (state_0.type == StateType.POWER):
+    #                 visited_power_states.append(state_0)
+    #         if reward > max_reward:
+    #             max_reward = reward
+    #             max_reward_path = path
+    #     return max_reward_path
+
     def get_max_reward_brute_force_path(self, paths):
         max_reward = -math.inf
         max_reward_path = None
@@ -320,7 +341,7 @@ class Environment:
             reward = 0
             visited_power_states = []
             for i in range(len(path) - 1):
-                state_tuple_0, state_tuple_1 = path[i][0], path[i][1]
+                state_tuple_0, state_tuple_1 = path[i], path[i + 1]
                 action = Environment.getActionFromStateTuples(state_tuple_0, state_tuple_1)
                 state_0 = self.grid[state_tuple_0[0]][state_tuple_0[1]]
                 state_1, r = self.step(state_0, action, [])

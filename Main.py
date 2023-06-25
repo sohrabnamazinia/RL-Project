@@ -8,9 +8,9 @@ import networkx as nx
 env1 = Environment(policy=Policy.CLOSENESS)
 env2 = Environment(policy=Policy.MAXPOWER)
 env3 = Environment(policy=Policy.COMBINATION)
-model1 = Model(env1, episode_count=1000, max_iter_per_episode=15)
-model2 = Model(env2, episode_count=1000, max_iter_per_episode=15)
-model3 = Model(env3, episode_count=1000, max_iter_per_episode=15)
+model1 = Model(env1, episode_count=1000, max_iter_per_episode=100)
+model2 = Model(env2, episode_count=1000, max_iter_per_episode=100)
+model3 = Model(env3, episode_count=1000, max_iter_per_episode=100)
 model1.environment.print_grid()
 train_result_1, visited_power_states_1 = model1.train()
 train_result_2, visited_power_states_2 = model2.train()
@@ -36,13 +36,15 @@ utilities.plot_dag(graph)
 print("************************************")
 boundry, adjList = Model.backtrack(graph, env3, model3, visited_power_states_3) 
 G = Model.pruning(graph, model3, env3, adjList, boundry)
+all_paths = Model.findPath(env3, graph)
 paths = Model.findPath(env3, G)
-#utilities.calculate_pruning_percentage(brute_force_paths, paths)
+utilities.calculate_pruning_percentage(all_paths, paths)
 rewards = model3.environment.compute_reward_dag_paths(paths, ground_truth_cumulative_reward)
 print("\n******************************\n")
 rewards_difference = [ground_truth_cumulative_reward - reward for reward in rewards]
 utilities.plot_path_reward_defference(rewards_difference)
 print("\n******************************\n")
+
 
 
 # NOTE: For now, we do not need this method because we believe our brute force method
