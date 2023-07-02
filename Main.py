@@ -14,7 +14,7 @@ model3 = Model(env3, episode_count=1000, max_iter_per_episode=100)
 model1.environment.print_grid()
 train_result_1, visited_power_states_1 = model1.train()
 train_result_2, visited_power_states_2 = model2.train()
-train_result_3, visited_power_states_3 = model3.train()
+train_result_3, visited_power_states_3 = model3.train(env1.q_table, env2.q_table)
 print("Closeness policy:")
 model1.test()
 print("\n*****************************\n")
@@ -33,10 +33,20 @@ print("\n******************************\n")
 print("Unioning the Digraphs of the models:\n")
 graph = utilities.union_dags(model1.dag, model2.dag)
 utilities.plot_dag(graph)
+all_paths = Model.findPath(env3, graph)
 print("************************************")
+
+# Implement discount_factor = 0 as a separate case
+if env3.discount_factor == 0:
+    path = model3.test_2()
+    if path in all_paths:
+        print("Pruning Percentage = 100%")
+    else:
+        print("Pruning Percentage = 0%, and the result path not in all  paths")
+    exit()
+
 boundry, adjList = Model.backtrack(graph, env3, model3, visited_power_states_3) 
 G = Model.pruning(graph, model3, env3, adjList, boundry)
-all_paths = Model.findPath(env3, graph)
 paths = Model.findPath(env3, G)
 utilities.calculate_pruning_percentage(all_paths, paths)
 rewards = model3.environment.compute_reward_dag_paths(paths, ground_truth_cumulative_reward)
@@ -44,7 +54,6 @@ print("\n******************************\n")
 rewards_difference = [ground_truth_cumulative_reward - reward for reward in rewards]
 utilities.plot_path_reward_defference(rewards_difference)
 print("\n******************************\n")
-
 
 
 # NOTE: For now, we do not need this method because we believe our brute force method

@@ -23,6 +23,7 @@ class Model:
         self.min_learning_rate = min_learning_rate
         self.current_optimal_policy = np.zeros((self.environment.x_size, self.environment.y_size)).astype(Action)
         self.rewards_per_episode = []
+        self.q_count = np.zeros((self.environment.x_size, self.environment.y_size, self.environment.action_size))
         # This will be initialized after training
         self.dag = nx.DiGraph()
     
@@ -66,9 +67,15 @@ class Model:
             #print("possible random", possible_actions)
             action = random.choice(possible_actions)
             return action
-        
+
+    def train(self, q_table_1=None, q_table_2=None):
+        if self.environment.discount_factor == 0 and q_table_2 is not None and q_table_1 is not None:
+            self.environment.q_table = q_table_1 + q_table_2
+            return self.get_current_optimal_policy(), []
+        else:
+            return self.train_non_zero_discount_factor()    
     
-    def train(self):
+    def train_non_zero_discount_factor(self):
         for i in range(self.episode_count):
             total_episode_reward = 0
             # keep track of visited states
@@ -92,6 +99,7 @@ class Model:
                     visited_power_states.append(old_state)
 
                 next_state, reward = self.environment.step(self.environment.agent_state, action, visited_power_states)
+                self.q_count[old_state.x][old_state.y][action.value] += 1
 
                 # add edge to candidate edge list fpr DAG
                 old_tuple = (old_state.x, old_state.y)
@@ -141,6 +149,29 @@ class Model:
             print("Action not defined")
             return None
         return (x, y)
+
+    # same as the previous test method, but it returns the state tuples not the actions
+    def test_2(self, print_result=True, print_optimal_path=True):
+        if (print_result):
+            self.print_current_optimal_policy()
+        reachedGoal = False
+        x = self.environment.x_start
+        y = self.environment.y_start
+        path = [(x, y)]
+        infinite_loop_counter = 0
+        while (not reachedGoal and infinite_loop_counter < self.environment.x_size * self.environment.y_size):
+            action = self.current_optimal_policy[x][y]
+            x, y = self.step_inference(x, y, action)
+            path.append((x, y))
+            if ((x, y) == (self.environment.end_state.x, self.environment.end_state.y)):
+                reachedGoal = True
+
+            infinite_loop_counter += 1
+        if print_optimal_path:
+            print("OPTIMAL PATH:")    
+            for state in path:
+                print(str(state), end=" ")
+        return path
 
     def test(self, print_result=True, print_optimal_path=True):
         if (print_result):

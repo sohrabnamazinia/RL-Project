@@ -19,17 +19,17 @@ discount_factors = set_discount_factors(experiments_count)
 
 for i in range(experiments_count):
     d_f = discount_factors[i]
-    env1 = Environment(policy=Policy.CLOSENESS, x_size=100, y_size=100, discount_factor=d_f, hard_reset_index=3)
-    env2 = Environment(policy=Policy.MAXPOWER, discount_factor=d_f, x_size=100, y_size=100, hard_reset_index=3)
-    env3 = Environment(policy=Policy.COMBINATION, discount_factor=d_f, x_size=100, y_size=100, hard_reset_index=3)
-    model1 = Model(env1, episode_count=10000, max_iter_per_episode=1000)
-    model2 = Model(env2, episode_count=10000, max_iter_per_episode=1000)
-    model3 = Model(env3, episode_count=10000, max_iter_per_episode=1000)
+    env1 = Environment(policy=Policy.CLOSENESS, discount_factor=d_f)
+    env2 = Environment(policy=Policy.MAXPOWER, discount_factor=d_f)
+    env3 = Environment(policy=Policy.COMBINATION, discount_factor=d_f)
+    model1 = Model(env1, episode_count=1000, max_iter_per_episode=100)
+    model2 = Model(env2, episode_count=1000, max_iter_per_episode=100)
+    model3 = Model(env3, episode_count=1000, max_iter_per_episode=100)
     print("Environment for discount_facor = " + str(d_f))
     model1.environment.print_grid()
     train_result_1, visited_power_states_1 = model1.train()
     train_result_2, visited_power_states_2 = model2.train()
-    train_result_3, visited_power_states_3 = model3.train()
+    train_result_3, visited_power_states_3 = model3.train(env1.q_table, env2.q_table)
     print("Closeness policy for discount_factor = " + str(d_f))
     model1.test()
     print("\n*****************************\n")
@@ -47,6 +47,13 @@ for i in range(experiments_count):
     #print("\n******************************\n")
     union_dag = utilities.union_dags(model1.dag, model2.dag)
     all_paths = Model.findPath(env3, union_dag)
+    if (d_f == 0):
+        optimal_path = model3.test_2()
+        if optimal_path in all_paths:
+            pruning_percentages.append(100)
+        else:
+            pruning_percentages.append(0)
+        continue
     #graph = Model.buildDAG(env3, model3, brute_force_paths, plot_dag=False)
     boundry, adjList = Model.backtrack(union_dag, env3, model3, visited_power_states_3)
     G = Model.pruning(union_dag, model3, env3, adjList, boundry)
