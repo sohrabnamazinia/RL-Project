@@ -334,7 +334,7 @@ class Environment:
     #             max_reward_path = path
     #     return max_reward_path
 
-    def get_max_reward_brute_force_path(self, paths):
+    def get_max_reward_all_paths(self, paths):
         max_reward = -math.inf
         max_reward_path = None
         for path in paths:

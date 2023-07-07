@@ -36,7 +36,7 @@ def run_one_test(start_x, start_y, env_side_length):
     #print(f"For recall test for start_x = {start_x}, start_y = {start_y}, env_side_length = {env_side_length}" + ", Brute Force for finding the combined policy:\n")
     #brute_force_paths, shortest_paths = Model.test_brute_force_combined_inference_3(model1, model2, env1, k=2, print_shortest_paths=False, max_allowed_path_size=model3.max_iter_per_episode)
     #print("\n******************************\n")
-    max_reward_all_paths = env3.get_max_reward_brute_force_path(all_paths)
+    max_reward_all_paths = env3.get_max_reward_all_paths(all_paths)
     #graph = Model.buildDAG(env3, model3, all_paths)
     boundry, adjList = Model.backtrack(dag, env3, model3, visited_power_states_3)
     G = Model.pruning(dag, model3, env3, adjList, boundry)
@@ -46,7 +46,7 @@ def run_one_test(start_x, start_y, env_side_length):
     return result
 
 
-diff_env_count = 20
+diff_env_count = 2
 diff_start_count = 10
 environment_size_lengths = []
 for i in range(diff_env_count):
@@ -60,9 +60,11 @@ for i in range(diff_env_count):
     for j in range(diff_start_count):
         start_x = random.randint(0, env_side_length - 1)
         start_y = random.randint(0, env_side_length - 1)
+        if (start_x == env_side_length - 1) and (start_y == env_side_length - 1):
+            true_count += 1
+            continue
         start_positions.append((start_x, start_y))
     for (start_x, start_y) in start_positions:
         true_count += run_one_test(start_x, start_y, env_side_length)
     recalls.append((true_count / diff_start_count) * 100)
-
 utilities.plot_recalls(environment_size_lengths, recalls)
